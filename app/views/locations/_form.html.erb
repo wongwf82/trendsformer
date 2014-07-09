@@ -1,0 +1,43 @@
+<%= form_for(@location, html: { class: "form-horizontal" }) do |f| %>
+  <div class="row">
+    <%= label_tag :search, "Search For Address" %>
+    <%= text_field_tag :location_search, nil, class: "search-query", type: "search" %>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+      Google Places:
+      <span id="rating"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-5 pull-right">
+      <strong id="name" class="section_heading_title"></strong>
+      <p class="copy">
+        <span id="fulladdress"></span><br/>
+        Ph.: <span id="phone"></span>
+      </p>
+    </div>
+    <div class="col-md-7">
+      <% if @location.errors.any? %>
+        <div class="notice">
+          <h3>Errors</h2>
+          <ul>
+          <% @location.errors.full_messages.each do |msg| %>
+            <li class="error"><%= msg %></li>
+          <% end %>
+          </ul>
+        </div>
+      <% end %>
+      <%= render partial: "googlemap" %>
+    </div>
+  </div>
+  <%= f.hidden_field :address %>
+  <%= f.hidden_field :location_name %>
+  <%= f.hidden_field :phone_number %>
+  <%= f.hidden_field :district %>
+  <%= f.hidden_field :postcode %>
+  <%= f.hidden_field :city %>
+  <%= f.hidden_field :country %>
+  <%= f.hidden_field :lat %>
+  <%= f.hidden_field :lng %>
+<% end %>

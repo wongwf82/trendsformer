@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TrendsFormer - Decide better and quickly</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+  <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Poiret+One' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Titillium+Web:300,400,600' rel='stylesheet' type='text/css'>
+</head>
+<body>
+
+  <%= render 'layouts/header' %>
+  <div class="container">
+    <div class="row">
+      <div class='flash'>
+        <%= bootstap_flash %>
+      </div>
+      <%= yield %>
+    </div>
+  </div>
+
+  <%= content_for?(:foot) ? yield(:foot) : '' %>
+  <%= yield(:document_ready) %>
+  <%= yield(:window_load) %>
+</body>
+</html>
