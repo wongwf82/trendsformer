@@ -12,6 +12,9 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require jquery.jqplot
+//= require jqplot.highlighter
+//= require jqplot.dateAxisRenderer
 //= require bootstrap
 //= require turbolinks
 

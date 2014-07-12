@@ -104,9 +104,8 @@
 
       infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
       infowindow.open(map, marker);
-      
-      // Autofill the fields in the form. TODO: improve parsing of the returned JSON data.
-      var address = place.address_components;
+
+      // Autofill the fields in the form. TODO: improve parsing of the returned JSON data
       var website = place.url;
 
       if (place.name) {
@@ -115,12 +114,37 @@
       var formatted_address = place.formatted_address;
       var international_phone_number = place.international_phone_number;
       var formatted_phone_number = place.formatted_phone_number;
-      var rating = place.rating;
+      var avgRating = place.rating;
+      var ratingCount = place.user_ratings_total;
 
-      $('#rating').text(rating);  
+      var line1 = [];
+      var dated_ratings = '';
+      var sumOfRating = 0;
+      if (place.reviews) {
+        var i = 0;
+        while (i < 10) {
+          if (place.reviews[i]) {
+            line1.push([epoch_toYMD(place.reviews[i].time), place.reviews[i].rating]);
+            sumOfRating += place.reviews[i].rating;
+          }
+          i++;
+        }
+      }
+
+      if (!avgRating) {
+        avgRating = Math.round( sumOfRating/ratingCount * 10 ) / 10;
+      }
+      if (!ratingCount) {
+        $('#chart1').hide();
+      }
+      else {
+        $('#chart1').show();
+      }
+
+      plotGraph(line1, avgRating);
+
       $('#name').text(location_name);
       $('#fulladdress').text(formatted_address);  
-      // alert(international_phone_number); 
       if (formatted_phone_number) {
         $('#phone').text(formatted_phone_number);   
       }
@@ -156,6 +180,30 @@
       //   var url = photos[i].getUrl({maxHeight: "1280", maxWidth: "1280"});
       //   $('#place_images').prepend('<img src="' + url + '"/>');
       // }
+
+
+      var yelp = JSON.parse(<%= @yelp.html_safe %>).businesses[0];
+
+      $('#yelpOverallRating').text(yelp.rating);  ;
+      if (yelp.is_closed) {
+        alert('yes!');
+      }
+      if (yelp.phone.slice(-4) == international_phone_number.slice(-4)) {
+        // Ajax load Yelp chart        
+      }
+
+
+
+
+      // alert(yelp.id);
+      // alert(yelp.url);
+      // alert(js_obj.businesses[0].url);
+      // alert(js_obj.businesses[0].rating_img_url);
+      // alert(js_obj.businesses[0].rating_img_url_small);
+      // alert(js_obj.businesses[0].rating_img_url_large);
+      // alert(js_obj.businesses[0].image_url);
+
+
     });
     
     // This is the function to animate the marker after dropping it.
@@ -167,7 +215,19 @@
       }
     };
 
+    function epoch_toYMD(utcSeconds)
+    {
+      var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+      d.setUTCSeconds(utcSeconds);
+      return d.toISOString().substring(0, 19).replace('T', ' ');
+    }
+
   //-->
   </script>
+
+
+  <script type="text/javascript"> 
+  </script>
+
 
 <% end %>

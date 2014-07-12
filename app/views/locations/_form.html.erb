@@ -1,12 +1,19 @@
 <%= form_for(@location, html: { class: "form-horizontal" }) do |f| %>
   <div class="row">
-    <%= label_tag :search, "Search For Address" %>
-    <%= text_field_tag :location_search, nil, class: "search-query", type: "search" %>
+    <div class="col-md-12">
+      <%= label_tag :search, "Search by Address or Name" %>
+      <%= text_field_tag :location_search, nil, class: "search-query", type: "search" %>
+    </div>
+  </div>
+  <div class="row" style="padding: 50px 0;">
+    <div class="col-md-6">
+      <div id="chart1" style="height: 300px; width: 500px; position: relative;" class="jqplot-target"></div>
+    </div>
   </div>
   <div class="row">
     <div class="col-md-3">
-      Google Places:
-      <span id="rating"></span>
+      Yelp:
+      <span id="yelpOverallRating"></span>
     </div>
   </div>
   <div class="row">
@@ -16,6 +23,7 @@
         <span id="fulladdress"></span><br/>
         Ph.: <span id="phone"></span>
       </p>
+      <%= debug(@result) %>
     </div>
     <div class="col-md-7">
       <% if @location.errors.any? %>
@@ -38,6 +46,44 @@
   <%= f.hidden_field :postcode %>
   <%= f.hidden_field :city %>
   <%= f.hidden_field :country %>
-  <%= f.hidden_field :lat %>
-  <%= f.hidden_field :lng %>
+  <%= f.text_field :lat %>
+  <%= f.text_field :lng %>
 <% end %>
+
+<% content_for :document_ready do %>
+  <script type="text/javascript">
+
+
+  function plotGraph(line1, avg) {
+    var plot1 = $.jqplot('chart1', [line1], {
+      title:'Google Places - Overall Rating: ' + avg + '/5',
+      axes: {
+        yaxis: {
+          min:0, 
+          max:6
+        },        
+        xaxis: {
+          renderer:$.jqplot.DateAxisRenderer,
+          tickOptions:{formatString:'%Y, %b-%#d'}
+        }
+      },
+      highlighter: {
+        show: true,
+        sizeAdjust: 7.5
+      },
+      series:[
+        {
+          lineWidth:4, 
+          markerOptions:
+          {
+              style:'filledCircle'
+          }
+        }
+      ]
+    });    
+    plot1.replot();
+  }
+
+  </script>
+<% end %>
+
