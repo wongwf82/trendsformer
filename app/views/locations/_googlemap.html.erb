@@ -170,7 +170,9 @@
         }
         catch (ex) {
           $('#loading-bar').hide();
-          $('#no-reviews').show();
+          if (!place.reviews) {
+            $('#no-reviews').show(); 
+          }
           // Show not found message
         }
       })   
