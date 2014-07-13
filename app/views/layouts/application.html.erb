@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>OutRelax - Decide better. Relax.</title>
+  <title>TrendsFormer - Make trends your friend</title>
   <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
   <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>
@@ -22,7 +22,13 @@
   </div>
 
   <%= content_for?(:foot) ? yield(:foot) : '' %>
-  <%= yield(:document_ready) %>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      <%= yield(:document_ready) %>
+    });
+  </script>
+  
   <%= yield(:window_load) %>
 </body>
 </html>

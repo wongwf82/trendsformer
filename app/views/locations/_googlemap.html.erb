@@ -4,7 +4,8 @@
 
   <script src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places" type="text/javascript"></script>
 
-  <script type="text/javascript">	
+  <script type="text/javascript">   
+
   <!--
     var defaultZoom = 16; // Why zoomed in? Because it looks good.
     
@@ -71,15 +72,24 @@
     });
     var place;
     var photos;
+    var ll;
 
     // Autocomplete Listener
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
+
+      $('#no-reviews').hide();
+      $('#address').hide();
+      $("#googlemap").css({"position":"absolute","top":"-20000px"});
+      $("#chartGoogle").css({"position":"absolute","top":"-20000px"});
+      $("#chartYelp").css({"position":"absolute","top":"-20000px"});
+
       place = autocomplete.getPlace();
       marker.setPosition(place.geometry.location);
       map.panTo(place.geometry.location);
       map.setZoom(16);
   		document.getElementById("location_lat").value = place.geometry.location.lat();
   		document.getElementById("location_lng").value = place.geometry.location.lng();
+      ll = place.geometry.location.lat() + ',' + place.geometry.location.lng();
 
   		// Sets the proper image on the marker. ie. school/hospital marker
   		var image = new google.maps.MarkerImage(
@@ -114,47 +124,62 @@
       var formatted_address = place.formatted_address;
       var international_phone_number = place.international_phone_number;
       var formatted_phone_number = place.formatted_phone_number;
-      var avgRating = place.rating;
-      var ratingCount = place.user_ratings_total;
 
-      var line1 = [];
-      var dated_ratings = '';
-      var sumOfRating = 0;
+      // Render Google Places chart
+      var title = '';
       if (place.reviews) {
+        var lineGoogle = [];
         var i = 0;
         while (i < 10) {
           if (place.reviews[i]) {
-            line1.push([epoch_toYMD(place.reviews[i].time), place.reviews[i].rating]);
-            sumOfRating += place.reviews[i].rating;
+            lineGoogle.push([epoch_toYMD(place.reviews[i].time), place.reviews[i].rating]);
           }
           i++;
         }
+        title = 'Google Places - Recent Overall Rating: ' + getAvgRating(lineGoogle) + '/5';
+        plotGraph('chartGoogle', lineGoogle, title);   
+        $("#chartGoogle").css({"position":"relative","top":"0px"});
+        $("#googlemap").css({"position":"relative","top":"0px"});
+        $('#address').show();
       }
 
-      if (!avgRating) {
-        avgRating = Math.round( sumOfRating/ratingCount * 10 ) / 10;
-      }
-      if (!ratingCount) {
-        $('#chart1').hide();
-      }
-      else {
-        $('#chart1').show();
-      }
-
-      plotGraph(line1, avgRating);
+      $('#loading-bar').show();
+      // Render Yelp chart   
+      var url = 'yelp/search?term=' + location_name + "&ll=" + ll;  
+      $.getJSON(url).done(function(dataSearch) {
+        try {
+          var yelp = JSON.parse(dataSearch).businesses[0];
+          // $('#yelpOverallRating').text(yelp.rating);
+          if (yelp.is_closed) {
+            // alert('yes!');
+          }
+          if (yelp.phone.slice(-4) == international_phone_number.slice(-4)) {
+            url = 'yelp/business?url=' + yelp.url;  
+            $.getJSON(url).done(function(lineYelp){
+              title = 'Yelp - Recent Overall Rating: ' + getAvgRating(lineYelp) + '/5';
+              plotGraph('chartYelp', lineYelp, title);
+              $('#loading-bar').hide();
+              $("#chartYelp").css({"position":"relative","top":"0px"});
+              $("#googlemap").css({"position":"relative","top":"0px"});
+              $('#address').show();
+            })
+          }
+          else {
+            $('#loading-bar').hide();
+          }  
+        }
+        catch (ex) {
+          $('#loading-bar').hide();
+          $('#no-reviews').show();
+          // Show not found message
+        }
+      })   
 
       $('#name').text(location_name);
       $('#fulladdress').text(formatted_address);  
       if (formatted_phone_number) {
-        $('#phone').text(formatted_phone_number);   
+        $('#phone').text("Ph.: " + formatted_phone_number);   
       }
-
-
-      // document.getElementById("location_address").value = formatted_address;
-      // document.getElementById("location_phone_number").value = formatted_phone_number;
-      // if (location_name) {
-      //   document.getElementById("location_location_name").value = location_name;
-      // }
       
       // if (zipcode){
       //   document.getElementById("location_postcode").value = zipcode;
@@ -181,29 +206,10 @@
       //   $('#place_images').prepend('<img src="' + url + '"/>');
       // }
 
-
-      var yelp = JSON.parse(<%= @yelp.html_safe %>).businesses[0];
-
-      $('#yelpOverallRating').text(yelp.rating);  ;
-      if (yelp.is_closed) {
-        alert('yes!');
-      }
-      if (yelp.phone.slice(-4) == international_phone_number.slice(-4)) {
-        // Ajax load Yelp chart        
-      }
-
-
-
-
-      // alert(yelp.id);
-      // alert(yelp.url);
-      // alert(js_obj.businesses[0].url);
       // alert(js_obj.businesses[0].rating_img_url);
       // alert(js_obj.businesses[0].rating_img_url_small);
       // alert(js_obj.businesses[0].rating_img_url_large);
       // alert(js_obj.businesses[0].image_url);
-
-
     });
     
     // This is the function to animate the marker after dropping it.
@@ -215,19 +221,62 @@
       }
     };
 
-    function epoch_toYMD(utcSeconds)
-    {
+    function epoch_toYMD(utcSeconds) {
       var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
       d.setUTCSeconds(utcSeconds);
       return d.toISOString().substring(0, 19).replace('T', ' ');
     }
 
+    function getAvgRating(line) {
+      var total = 0; 
+      for(var i = 0, len = line.length; i < len; i++){
+          total += line[i][1]; 
+      }
+      return Math.round( total/line.length * 10 ) / 10;      
+    }
+
+    function plotGraph(graph, line, title) {
+
+      $.jqplot.config.enablePlugins = true;
+
+      $.jqplot(graph, [line], {
+        title: title,
+        axes: {
+          yaxis: {
+            min: 0, 
+            max: 6,
+            tickInterval: 1
+          },        
+          xaxis: {
+            renderer:$.jqplot.DateAxisRenderer,
+            tickOptions:{formatString:'%Y, %b-%#d'}
+          }
+        },
+        highlighter: {
+          show: true,
+          sizeAdjust: 7.5
+        },
+        series:[
+          {
+            lineWidth: 4, 
+            markerOptions:
+            {
+                style:'filledCircle'
+            }
+          }        
+        ],
+        seriesDefaults: {
+          rendererOptions: {
+            smooth: true
+          },
+          trendline: {
+            color: '#666666',   // CSS color spec for the trend line.
+          }
+        } 
+      }).replot();
+    }    
+
   //-->
   </script>
-
-
-  <script type="text/javascript"> 
-  </script>
-
 
 <% end %>

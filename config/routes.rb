@@ -2,6 +2,10 @@ Rails.application.routes.draw do
 
   resources :locations
 
+
+  match '/yelp/search', to: 'locations#yelp_search', :via => [:get]
+  match '/yelp/business', to: 'locations#yelp_business', :via => [:get]
+
   root :to => 'locations#new'
   # get "static_pages/home"
   # get "static_pages/help"

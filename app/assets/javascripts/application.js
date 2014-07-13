@@ -13,8 +13,10 @@
 //= require jquery
 //= require jquery_ujs
 //= require jquery.jqplot
-//= require jqplot.highlighter
 //= require jqplot.dateAxisRenderer
+//= require jqplot.highlighter
+//= require jqplot.trendline
+
 //= require bootstrap
 //= require turbolinks
 

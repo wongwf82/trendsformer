@@ -27,6 +27,13 @@ class LocationsController < ApplicationController
   def new
     @location = Location.new
 
+    respond_to do |format|
+      format.html # new.html.erb
+      format.json { render json: @location }
+    end
+  end
+
+  def yelp_search
     consumer_key = 'DhEyrTa5xjjvWwAQiuhYuA'
     consumer_secret = 'ZqJe2cM11YUcUtZiM7Uhr5cEnM8'
     token = 'jE-067Nex2rCVb0QJqPNTiqcaBDWN390'
@@ -35,33 +42,19 @@ class LocationsController < ApplicationController
     api_host = 'api.yelp.com'
     consumer = OAuth::Consumer.new(consumer_key, consumer_secret, {:site => "http://#{api_host}"})
     access_token = OAuth::AccessToken.new(consumer, token, token_secret)
-    path = "/v2/search?term=boa&ll=34.089762,-118.39279199999999&radius=1&limit=1"
+    path = "/v2/search?term=#{params[:term]}&ll=#{params[:ll]}&radius=1&limit=1"
 
-    @yelp = access_token.get(path).body.to_json
+    render json: access_token.get(URI.encode(path)).body.to_json
+  end 
 
-
-    # doc = Nokogiri::HTML(open())
-    site = "http://www.yelp.com/biz/boa-steakhouse-west-hollywood"
-    # site = 'http://www.thatvenue.com/'
-    # doc = Nokogiri::HTML(open(site, 'User-Agent' => 'ruby'))
-
-    doc = Nokogiri::HTML(open(site))
-
-    # url_text = Net::HTTP.get(URI.parse site)
-    # doc = Nokogiri::XML(url_text)
-    # @result = doc.css('#super-container').text.to_json
-
-
-    # @resultHash = {}
-    # .star-img
-    # doc.css('#search-box').each do |content|
-    #   @result = content.to_json
-    # end
-
-    respond_to do |format|
-      format.html # new.html.erb
-      format.json { render json: @location }
-    end
+  def yelp_business
+    # url = "http://www.yelp.com/biz/boa-steakhouse-west-hollywood"
+    url = params[:url]
+    agent = Mechanize.new
+    doc = Nokogiri::HTML(agent.get(URI.encode(url)).body)
+    render json: '[' + doc.css(".review-content").map { |review| '["' + 
+                    review.css("meta[@itemprop='datePublished']").attr("content").text + '",' + 
+                    review.css("meta[@itemprop='ratingValue']").attr("content").text + ']'}.join(', ') + ']'  
   end
 
   # GET /locations/1/edit

@@ -1,30 +1,27 @@
 <%= form_for(@location, html: { class: "form-horizontal" }) do |f| %>
   <div class="row">
     <div class="col-md-12">
-      <%= label_tag :search, "Search by Address or Name" %>
+      <%= label_tag :search, "Enter the restaurant or location name" %>
       <%= text_field_tag :location_search, nil, class: "search-query", type: "search" %>
     </div>
   </div>
-  <div class="row" style="padding: 50px 0;">
-    <div class="col-md-6">
-      <div id="chart1" style="height: 300px; width: 500px; position: relative;" class="jqplot-target"></div>
+  <div class="row">
+    <div class="col-md-12 ta-center">
+      <div id="chartGoogle" style="height: 300px; width: 100%; position: relative;" class="jqplot-target"></div>
+      <div id="no-reviews">
+        <h1 style="color: #666666;">Sorry! No trends were found for this location.</h1>
+        <h2 style="color: #999999;">Most likely this is due 0 reviews <br/>on Google Places and Yelp.</h2>
+        <img src="<%= image_path("mascot.jpg") %>" />
+      </div>
+    </div>
+    <div class="col-md-12 ta-center" style="padding-top: 50px;">
+      <img id="loading-bar" src="<%= image_path("loader.gif") %>" />
+    </div>
+    <div class="col-md-12 ta-center">
+      <div id="chartYelp" style="height: 300px; width: 100%; position: relative;" class="jqplot-target"></div>
     </div>
   </div>
   <div class="row">
-    <div class="col-md-3">
-      Yelp:
-      <span id="yelpOverallRating"></span>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-5 pull-right">
-      <strong id="name" class="section_heading_title"></strong>
-      <p class="copy">
-        <span id="fulladdress"></span><br/>
-        Ph.: <span id="phone"></span>
-      </p>
-      <%= debug(@result) %>
-    </div>
     <div class="col-md-7">
       <% if @location.errors.any? %>
         <div class="notice">
@@ -38,6 +35,16 @@
       <% end %>
       <%= render partial: "googlemap" %>
     </div>
+    <div class="col-md-5">
+      <div id="address">
+        <strong id="name" class="section_heading_title"></strong>
+        <p class="copy">
+          <span id="fulladdress"></span><br/>
+          <span id="phone"></span>
+          <span id="yelpOverallRating" style="display:none;"></span>
+        </p>
+      </div>
+    </div>
   </div>
   <%= f.hidden_field :address %>
   <%= f.hidden_field :location_name %>
@@ -46,44 +53,16 @@
   <%= f.hidden_field :postcode %>
   <%= f.hidden_field :city %>
   <%= f.hidden_field :country %>
-  <%= f.text_field :lat %>
-  <%= f.text_field :lng %>
+  <%= f.hidden_field :lat %>
+  <%= f.hidden_field :lng %>
 <% end %>
 
+
 <% content_for :document_ready do %>
-  <script type="text/javascript">
+      
+  $("#chartGoogle").css({"position":"absolute","top":"-20000px"});
+  $("#chartYelp").css({"position":"absolute","top":"-20000px"});
+  $("#googlemap").css({"position":"absolute","top":"-20000px"});
 
-
-  function plotGraph(line1, avg) {
-    var plot1 = $.jqplot('chart1', [line1], {
-      title:'Google Places - Overall Rating: ' + avg + '/5',
-      axes: {
-        yaxis: {
-          min:0, 
-          max:6
-        },        
-        xaxis: {
-          renderer:$.jqplot.DateAxisRenderer,
-          tickOptions:{formatString:'%Y, %b-%#d'}
-        }
-      },
-      highlighter: {
-        show: true,
-        sizeAdjust: 7.5
-      },
-      series:[
-        {
-          lineWidth:4, 
-          markerOptions:
-          {
-              style:'filledCircle'
-          }
-        }
-      ]
-    });    
-    plot1.replot();
-  }
-
-  </script>
 <% end %>
 
