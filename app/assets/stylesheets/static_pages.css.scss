@@ -38,6 +38,14 @@
 #no-reviews {
     display: none;
 }
+#closed {
+    background-color: #8d0b08;
+    border-radius: 7px;
+    color: #ffffff;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: none;
+}
 .row {
     margin-bottom: 50px;
 }

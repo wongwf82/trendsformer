@@ -19,14 +19,11 @@
     };
     var map = new google.maps.Map(document.getElementById('googlemap'),mapOptions);
 
-  	// I'm Centering the map in Bangkok
-  	// '13.731547730050778'
-  	// '100.56798934936523'
   	var mylat = document.getElementById("location_lat").value;
   	var mylng = document.getElementById("location_lng").value;
   	if (jQuery.isEmptyObject(mylat)) {
-  	  var mylat = '13.731548';
-  	  var mylng = '100.56799';
+  	  var mylat = '40.729477';
+  	  var mylng = '-73.984403';
   	  var defaultZoom = 14;
   	};
 
@@ -77,6 +74,7 @@
     // Autocomplete Listener
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
 
+      $('#closed').hide();
       $('#no-reviews').hide();
       $('#address').hide();
       $("#googlemap").css({"position":"absolute","top":"-20000px"});
@@ -151,7 +149,7 @@
           var yelp = JSON.parse(dataSearch).businesses[0];
           // $('#yelpOverallRating').text(yelp.rating);
           if (yelp.is_closed) {
-            // alert('yes!');
+            $('#closed').show();
           }
           if (yelp.phone.slice(-4) == international_phone_number.slice(-4)) {
             url = 'yelp/business?url=' + yelp.url;  

@@ -1,7 +1,7 @@
 <%= form_for(@location, html: { class: "form-horizontal" }) do |f| %>
   <div class="row">
     <div class="col-md-12">
-      <%= label_tag :search, "Enter the restaurant or location name" %>
+      <%= label_tag :search, "Enter a restaurant or location name" %>
       <%= text_field_tag :location_search, nil, class: "search-query", type: "search" %>
     </div>
   </div>
@@ -36,6 +36,7 @@
       <%= render partial: "googlemap" %>
     </div>
     <div class="col-md-5">
+      <div id="closed">This location has closed.</div>
       <div id="address">
         <strong id="name" class="section_heading_title"></strong>
         <p class="copy">
