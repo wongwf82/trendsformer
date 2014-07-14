@@ -5,71 +5,33 @@
   <script src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places" type="text/javascript"></script>
 
   <script type="text/javascript">   
+ 
+    var map;
+    var place;    
+    var latlng;
 
-  <!--
-    var defaultZoom = 16; // Why zoomed in? Because it looks good.
-    
-    // create map and add controls
-    var mapOptions = {
-      center: new google.maps.LatLng(13.731547730050778, 100.56798934936523),
-      zoom: defaultZoom,
-      mapTypeId: google.maps.MapTypeId.ROADMAP,
-      scrollwheel: false,
-      scaleControl: false
+    // Default to Momofuku as an example
+    latlng = new google.maps.LatLng(40.729485,-73.984392);
+    map = getMap(latlng);    
+    var request = {
+      placeId: 'ChIJkXQ3_INZwokRE74ZvG46Jjc'
     };
-    var map = new google.maps.Map(document.getElementById('googlemap'),mapOptions);
-
-  	var mylat = document.getElementById("location_lat").value;
-  	var mylng = document.getElementById("location_lng").value;
-  	if (jQuery.isEmptyObject(mylat)) {
-  	  var mylat = '40.729477';
-  	  var mylng = '-73.984403';
-  	  var defaultZoom = 14;
-  	};
-
-  	// set center point of map to be of the Marker or the Default City
-    var centrePoint = new google.maps.LatLng(mylat, mylng);
-    map.setCenter(centrePoint);
-    map.setZoom(defaultZoom); 
-
-  	// add a draggable marker
-    marker = new google.maps.Marker({
-      map: map,
-      draggable: true,
-      animation: google.maps.Animation.DROP,
-      position: centrePoint
-    });
-
-    var defaultImage = new google.maps.MarkerImage(
-        "http://maps.gstatic.com/mapfiles/place_api/icons/geocode-71.png",
-        new google.maps.Size(71, 71),
-        new google.maps.Point(0, 0),
-        new google.maps.Point(17, 34),
-        new google.maps.Size(35, 35));
-    marker.setIcon(defaultImage);
-
-    google.maps.event.addListener(marker, 'click', toggleBounce);
-
-  	// create Info window for marker
-    var infowindow = new google.maps.InfoWindow();
-    
-    // Address Autocomplete
     var input = document.getElementById('location_search');
+    input.value = "momofuku noodle bar, 1st Avenue, New York, NY, United States";
+
+    var service = new google.maps.places.PlacesService(map);
+    service.getDetails(request, function(place, status) {
+      if (status == google.maps.places.PlacesServiceStatus.OK) {        
+        setMarker(map, place);
+        fillFields(place);
+        plotGooglePlacesGraph(place);
+        plotYelpGraph(place);        
+      }
+    });  
+
+    // Address Autocomplete
     var autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo('bounds', map);
-    
-  	// add a drag listener to the map
-  	google.maps.event.addListener(marker, "dragend", function() {
-  		var point = marker.getPosition();
-  		map.panTo(point);
-  		document.getElementById("location_lat").value = point.lat();
-  		document.getElementById("location_lng").value = point.lng();
-  		infowindow.close();
-      marker.setIcon(defaultImage);
-    });
-    var place;
-    var photos;
-    var ll;
 
     // Autocomplete Listener
     google.maps.event.addListener(autocomplete, 'place_changed', function() {
@@ -82,20 +44,46 @@
       $("#chartYelp").css({"position":"absolute","top":"-20000px"});
 
       place = autocomplete.getPlace();
-      marker.setPosition(place.geometry.location);
-      map.panTo(place.geometry.location);
-      map.setZoom(16);
-  		document.getElementById("location_lat").value = place.geometry.location.lat();
-  		document.getElementById("location_lng").value = place.geometry.location.lng();
-      ll = place.geometry.location.lat() + ',' + place.geometry.location.lng();
 
-  		// Sets the proper image on the marker. ie. school/hospital marker
-  		var image = new google.maps.MarkerImage(
+      latlng = new google.maps.LatLng(place.geometry.location.lat(),place.geometry.location.lng());
+      map = getMap(latlng);
+
+      setMarker(map, place);
+      fillFields(place);
+      plotGooglePlacesGraph(place);
+      plotYelpGraph(place);
+
+      // alert(js_obj.businesses[0].rating_img_url);
+      // alert(js_obj.businesses[0].rating_img_url_small);
+      // alert(js_obj.businesses[0].rating_img_url_large);
+      // alert(js_obj.businesses[0].image_url);
+    });
+
+    function getMap(latlng) {
+      var mapOptions = {
+        center: latlng,
+        zoom: 16,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        scrollwheel: false,
+        scaleControl: false
+      };
+      map = new google.maps.Map(document.getElementById('googlemap'), mapOptions);
+      return map;
+    }
+
+    function setMarker(map, place) {
+      var marker = new google.maps.Marker({
+        map: map,
+        position: new google.maps.LatLng(40.729485, -73.984392)
+      });
+
+      // Sets the proper image on the marker. ie. school/hospital marker
+      var image = new google.maps.MarkerImage(
           place.icon,
           new google.maps.Size(71, 71),
           new google.maps.Point(0, 0),
           new google.maps.Point(17, 34),
-          new google.maps.Size(35, 35));
+          new google.maps.Size(35, 35));    
       marker.setIcon(image);
       marker.setPosition(place.geometry.location);
 
@@ -109,78 +97,19 @@
                     place.address_components[2].short_name || '')
                   ].join(' ');
       }
-
+      var infowindow = new google.maps.InfoWindow();
       infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-      infowindow.open(map, marker);
+      infowindow.open(map, marker);      
+    }
 
-      // Autofill the fields in the form. TODO: improve parsing of the returned JSON data
-      var website = place.url;
-
-      if (place.name) {
-        var location_name = place.name;
+    function fillFields(place) {
+      $('#location_lat').text(place.geometry.location.lat());
+      $('#location_lng').text(place.geometry.location.lng());
+      $('#name').text(place.name);
+      $('#fulladdress').text(place.formatted_address);  
+      if (place.formatted_phone_number) {
+        $('#phone').text("Ph.: " + place.formatted_phone_number);   
       }
-      var formatted_address = place.formatted_address;
-      var international_phone_number = place.international_phone_number;
-      var formatted_phone_number = place.formatted_phone_number;
-
-      // Render Google Places chart
-      var title = '';
-      if (place.reviews) {
-        var lineGoogle = [];
-        var i = 0;
-        while (i < 10) {
-          if (place.reviews[i]) {
-            lineGoogle.push([epoch_toYMD(place.reviews[i].time), place.reviews[i].rating]);
-          }
-          i++;
-        }
-        title = 'Google Places - Recent Overall Rating: ' + getAvgRating(lineGoogle) + '/5';
-        plotGraph('chartGoogle', lineGoogle, title);   
-        $("#chartGoogle").css({"position":"relative","top":"0px"});
-        $("#googlemap").css({"position":"relative","top":"0px"});
-        $('#address').show();
-      }
-
-      $('#loading-bar').show();
-      // Render Yelp chart   
-      var url = 'yelp/search?term=' + location_name + "&ll=" + ll;  
-      $.getJSON(url).done(function(dataSearch) {
-        try {
-          var yelp = JSON.parse(dataSearch).businesses[0];
-          // $('#yelpOverallRating').text(yelp.rating);
-          if (yelp.is_closed) {
-            $('#closed').show();
-          }
-          if (yelp.phone.slice(-4) == international_phone_number.slice(-4)) {
-            url = 'yelp/business?url=' + yelp.url;  
-            $.getJSON(url).done(function(lineYelp){
-              title = 'Yelp - Recent Overall Rating: ' + getAvgRating(lineYelp) + '/5';
-              plotGraph('chartYelp', lineYelp, title);
-              $('#loading-bar').hide();
-              $("#chartYelp").css({"position":"relative","top":"0px"});
-              $("#googlemap").css({"position":"relative","top":"0px"});
-              $('#address').show();
-            })
-          }
-          else {
-            $('#loading-bar').hide();
-          }  
-        }
-        catch (ex) {
-          $('#loading-bar').hide();
-          if (!place.reviews) {
-            $('#no-reviews').show(); 
-          }
-          // Show not found message
-        }
-      })   
-
-      $('#name').text(location_name);
-      $('#fulladdress').text(formatted_address);  
-      if (formatted_phone_number) {
-        $('#phone').text("Ph.: " + formatted_phone_number);   
-      }
-      
       // if (zipcode){
       //   document.getElementById("location_postcode").value = zipcode;
       // }
@@ -204,22 +133,8 @@
       // for (var i = 0; i < photos.length; i++) {
       //   var url = photos[i].getUrl({maxHeight: "1280", maxWidth: "1280"});
       //   $('#place_images').prepend('<img src="' + url + '"/>');
-      // }
-
-      // alert(js_obj.businesses[0].rating_img_url);
-      // alert(js_obj.businesses[0].rating_img_url_small);
-      // alert(js_obj.businesses[0].rating_img_url_large);
-      // alert(js_obj.businesses[0].image_url);
-    });
-    
-    // This is the function to animate the marker after dropping it.
-    function toggleBounce() {
-      if (marker.getAnimation() != null) {
-        marker.setAnimation(null);
-      } else {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-      }
-    };
+      // }      
+    }
 
     function epoch_toYMD(utcSeconds) {
       var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
@@ -233,6 +148,58 @@
           total += line[i][1]; 
       }
       return Math.round( total/line.length * 10 ) / 10;      
+    }
+
+    function plotGooglePlacesGraph(place) {
+      if (place.reviews) {
+        var lineGoogle = [];
+        var i = 0;
+        while (i < 10) {
+          if (place.reviews[i]) {
+            lineGoogle.push([epoch_toYMD(place.reviews[i].time), place.reviews[i].rating]);
+          }
+          i++;
+        }
+        var title = 'Google Places - Recent Overall Rating: ' + getAvgRating(lineGoogle) + '/5';
+        plotGraph('chartGoogle', lineGoogle, title);   
+        $("#chartGoogle").css({"position":"relative","top":"0px"});
+        $("#googlemap").css({"position":"relative","top":"0px"});
+        $('#address').show();
+      } 
+    }
+
+    function plotYelpGraph(place) {
+      $('#loading-bar').show();
+      var url = 'yelp/search?term=' + place.name + "&ll=" + place.geometry.location.lat() + ',' + place.geometry.location.lng();  
+      $.getJSON(url).done(function(dataSearch) {
+        try {
+          var yelp = JSON.parse(dataSearch).businesses[0];
+          // $('#yelpOverallRating').text(yelp.rating);
+          if (yelp.is_closed) {
+            $('#closed').show();
+          }
+          if (yelp.phone.slice(-4) == place.international_phone_number.slice(-4)) {
+            url = 'yelp/business?url=' + yelp.url;  
+            $.getJSON(url).done(function(lineYelp){
+              var title = 'Yelp - Recent Overall Rating: ' + getAvgRating(lineYelp) + '/5';
+              plotGraph('chartYelp', lineYelp, title);
+              $('#loading-bar').hide();
+              $("#chartYelp").css({"position":"relative","top":"0px"});
+              $("#googlemap").css({"position":"relative","top":"0px"});
+              $('#address').show();
+            })
+          }
+          else {
+            $('#loading-bar').hide();
+          }  
+        }
+        catch (ex) {
+          $('#loading-bar').hide();
+          if (!place.reviews) {
+            $('#no-reviews').show(); 
+          }
+        }
+      })         
     }
 
     function plotGraph(graph, line, title) {
@@ -276,7 +243,6 @@
       }).replot();
     }    
 
-  //-->
   </script>
 
 <% end %>
