@@ -18,6 +18,7 @@ gem 'font-awesome-sass'
 gem 'oauth'
 gem 'mechanize'
 gem 'nokogiri'
+gem 'metamagic'
 
 group :development do
   gem 'sqlite3', '1.3.8'
